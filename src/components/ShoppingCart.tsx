@@ -14,7 +14,6 @@ interface ShoppingCartProps {
   items: CartItem[];
   onUpdateQuantity: (productId: number, newQuantity: number) => void;
   onRemoveItem: (productId: number) => void;
-  onProceedToCheckout?: () => void;
 }
 
 export const ShoppingCart = ({
@@ -23,7 +22,6 @@ export const ShoppingCart = ({
   items,
   onUpdateQuantity,
   onRemoveItem,
-  onProceedToCheckout,
 }: ShoppingCartProps) => {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 15 : 0;
@@ -128,7 +126,7 @@ export const ShoppingCart = ({
                   <span className="text-gradient">${total}</span>
                 </div>
               </div>
-              <Button variant="luxury" size="lg" className="w-full" onClick={onProceedToCheckout}>
+              <Button variant="luxury" size="lg" className="w-full">
                 Proceed to Checkout
               </Button>
             </div>

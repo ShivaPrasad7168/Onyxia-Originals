@@ -15,9 +15,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-lg mb-2">
-              <img src={logo} alt="ONYXIA Logo" className="h-20 w-20 object-cover rounded-full" />
-            </div>
+            <img src={logo} alt="ONYXIA Logo" className="h-16 w-auto" />
             <p className="text-muted-foreground max-w-sm">
               Elevating everyday style with premium quality and timeless designs.
               Experience luxury that speaks for itself.

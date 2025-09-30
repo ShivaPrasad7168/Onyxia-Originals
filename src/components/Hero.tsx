@@ -1,23 +1,8 @@
-
-
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroImage from "@/assets/hero-tshirt.jpg";
 
-
-
-
-
-
-
-
-interface HeroProps {
-  signedIn?: boolean;
-}
-
-export const Hero = ({ signedIn }: HeroProps) => {
-  // No intro animation, show main content immediately
+export const Hero = () => {
   const scrollToCollection = () => {
     document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
   };
