@@ -37,8 +37,8 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="h-16 w-16 rounded-full flex items-center justify-center shadow-lg">
-              <img src={logo} alt="ONYXIA Logo" className="h-12 w-12 object-cover rounded-full" />
+            <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-lg">
+              <img src={logo} alt="ONYXIA Logo" className="h-20 w-20 object-cover rounded-full" />
             </div>
           </div>
 

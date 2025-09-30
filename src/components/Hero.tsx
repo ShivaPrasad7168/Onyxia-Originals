@@ -4,17 +4,14 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroImage from "@/assets/hero-tshirt.jpg";
 
-import SignupLoginPopup from "./SignupLoginPopup";
 
 
 
 
-interface HeroProps {
   signedIn?: boolean;
 }
 
 
-export const Hero = ({ signedIn }: HeroProps) => {
   const scrollToCollection = () => {
     document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" });
   };
