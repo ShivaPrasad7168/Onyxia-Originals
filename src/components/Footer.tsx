@@ -1,12 +1,28 @@
 import { Facebook, Instagram, Twitter, Youtube, Lock, CreditCard } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/onyxia-logo.png";
 import { Separator } from "@/components/ui/separator";
 
 export const Footer = () => {
   const footerLinks = {
-    Shop: ["All Products", "New Arrivals", "Best Sellers", "Limited Edition"],
-    Support: ["Contact Us", "FAQs", "Size Guide", "Shipping Info"],
-    Company: ["About Us", "Careers", "Privacy Policy", "Terms of Service"],
+    Shop: [
+      { label: "All Products", href: "/#collection" },
+      { label: "New Arrivals", href: "/#collection" },
+      { label: "Best Sellers", href: "/#collection" },
+      { label: "Limited Edition", href: "/#collection" }
+    ],
+    Support: [
+      { label: "Contact Us", href: "/contact" },
+      { label: "FAQs", href: "/faq" },
+      { label: "Size Guide", href: "/faq" },
+      { label: "Shipping Info", href: "/shipping" }
+    ],
+    Company: [
+      { label: "About Us", href: "/about" },
+      { label: "Careers", href: "/contact" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" }
+    ],
   };
 
   return (
@@ -58,13 +74,13 @@ export const Footer = () => {
               <h3 className="font-semibold mb-4">{category}</h3>
               <ul className="space-y-2">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
+                  <li key={link.label}>
+                    <Link
+                      to={link.href}
                       className="text-muted-foreground hover:text-primary transition-colors"
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>

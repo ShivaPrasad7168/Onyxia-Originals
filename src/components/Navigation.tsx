@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Search, Menu, X, User, LogIn, UserPlus, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,10 +27,10 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
   }, []);
 
   const menuItems = [
-    { label: "Home", href: "#home" },
-    { label: "Shop", href: "#collection" },
-    { label: "About", href: "#about" },
-    { label: "Contact", href: "#contact" },
+    { label: "Home", href: "/" },
+    { label: "Shop", href: "/#collection" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
@@ -49,13 +51,13 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
             </Button>
 
             {/* Center: Logo */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            <Link to="/" className="absolute left-1/2 -translate-x-1/2">
               <img 
                 src={logo} 
                 alt="ONYXIA Logo" 
                 className="h-14 w-auto" 
               />
-            </div>
+            </Link>
 
             {/* Right: Search & Cart */}
             <div className="flex items-center space-x-2">
@@ -130,14 +132,14 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
           <div className="flex-1 overflow-y-auto py-6">
             <nav className="space-y-1 px-3">
               {menuItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
-                  href={item.href}
+                  to={item.href}
                   className="block px-4 py-3 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-colors duration-200 font-medium"
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
             </nav>
 

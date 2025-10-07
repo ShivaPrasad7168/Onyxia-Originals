@@ -1,6 +1,6 @@
 import { useCart } from "@/contexts/CartContext";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShoppingCart as ShoppingCartIcon, Heart, Minus, Plus, ArrowLeft } from "lucide-react";
+import { ShoppingCart as ShoppingCartIcon, Heart, Minus, Plus, ArrowLeft, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Navigation } from "@/components/Navigation";
 import { ShoppingCart } from "@/components/ShoppingCart";
 import { SignupLoginPopup } from "@/components/SignupLoginPopup";
 import { Footer } from "@/components/Footer";
+import { SizeGuide } from "@/components/SizeGuide";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { Product } from "@/components/ProductCard";
 import { useState } from "react";
 import product1 from "@/assets/product-1.jpg";
@@ -124,6 +126,7 @@ export const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState("green");
   const [isFavorite, setIsFavorite] = useState(false);
   const [sliderIndex, setSliderIndex] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   // Use product.images for carousel
   const productImages = product?.images || [product?.image];
   // Keyboard navigation for slider
@@ -298,7 +301,18 @@ export const ProductDetail = () => {
 
             {/* Size Selector */}
             <div className="space-y-3">
-              <label className="text-sm font-medium">Size:</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Size:</label>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-sm"
+                  onClick={() => setSizeGuideOpen(true)}
+                >
+                  <Ruler className="h-4 w-4 mr-1" />
+                  Size Guide
+                </Button>
+              </div>
               <div className="flex gap-2">
                 {sizes.map((size) => (
                   <Button
@@ -401,11 +415,22 @@ export const ProductDetail = () => {
             <div className="pt-6 border-t border-border">
               <h3 className="text-lg font-semibold mb-4">DESCRIPTION</h3>
               <p className="text-sm text-foreground/90 leading-relaxed">
-                {product.description}
+                {product.description} Crafted from a premium poly-cotton blend (65% polyester, 35% cotton) 
+                with a fabric weight of 180 GSM, this garment offers superior comfort and durability. 
+                The regular fit design ensures all-day wearability while maintaining a polished appearance. 
+                Features include reinforced stitching, pre-shrunk fabric, and colorfast dyes that resist fading. 
+                Perfect for both casual and smart-casual occasions.
               </p>
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewsSection
+          productId={product.id}
+          averageRating={product.rating}
+          reviewCount={product.reviewCount}
+        />
 
         {/* Related Products */}
         <div className="mt-16 pt-12 border-t border-border">
@@ -458,6 +483,8 @@ export const ProductDetail = () => {
         onClose={() => setLoginOpen(false)}
         onSuccess={() => setIsLoggedIn(true)}
       />
+
+      <SizeGuide isOpen={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
     </>
   );
 };
