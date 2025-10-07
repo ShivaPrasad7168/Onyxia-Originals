@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, Search, Menu, X, User, LogIn, UserPlus, Globe } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, User, LogIn, UserPlus, Globe, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,10 @@ import logo from "@/assets/onyxia-logo.png";
 interface NavigationProps {
   cartItemsCount?: number;
   onCartClick: () => void;
+  wishlistCount?: number;
 }
 
-export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps) => {
+export const Navigation = ({ cartItemsCount = 0, onCartClick, wishlistCount = 0 }: NavigationProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,7 +60,7 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
               />
             </Link>
 
-            {/* Right: Search & Cart */}
+            {/* Right: Search, Wishlist & Cart */}
             <div className="flex items-center space-x-2">
               {/* Search */}
               {searchOpen ? (
@@ -80,6 +81,23 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick }: NavigationProps)
                   <Search className="h-4 w-4" />
                 </Button>
               )}
+
+              {/* Wishlist */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-9 w-9"
+                onClick={() => navigate("/wishlist")}
+                aria-label="Wishlist"
+                title="Wishlist"
+              >
+                <Heart className="h-4 w-4" />
+                {wishlistCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-[10px] bg-pink-600 text-white">
+                    {wishlistCount}
+                  </Badge>
+                )}
+              </Button>
 
               {/* Cart */}
               <Button

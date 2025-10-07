@@ -1,0 +1,87 @@
+import { Product } from "@/components/ProductCard";
+import product1 from "@/assets/product-1.jpg";
+import product2 from "@/assets/product-2.jpg";
+import product3 from "@/assets/product-3.jpg";
+import product4 from "@/assets/product-4.jpg";
+
+export const products: Product[] = [
+  {
+    id: "1",
+    name: "Dragon Emblem Tee",
+    description: "Premium tee with dragon emblem.",
+    slug: "dragon-emblem-tee",
+    price: 129,
+    image: product1,
+    images: [product1, product2],
+    category: "Signature",
+    isNew: true,
+    rating: 4.8,
+    reviewCount: 234,
+  },
+  {
+    id: "2",
+    name: "Classic White Premium",
+    description: "Classic white premium tee.",
+    slug: "classic-white-premium",
+    price: 99,
+    image: product2,
+    images: [product2, product1],
+    category: "Essential",
+    rating: 4.6,
+    reviewCount: 156,
+    discount: 20,
+  },
+  {
+    id: "3",
+    name: "Charcoal Elite",
+    description: "Charcoal elite edition tee.",
+    slug: "charcoal-elite",
+    price: 119,
+    image: product3,
+    images: [product3, product4],
+    category: "Essential",
+    isNew: true,
+    rating: 4.9,
+    reviewCount: 189,
+  },
+  {
+    id: "4",
+    name: "Navy Gold Edition",
+    description: "Navy gold edition tee.",
+    slug: "navy-gold-edition",
+    price: 139,
+    image: product4,
+    images: [product4, product3],
+    category: "Limited",
+    rating: 5.0,
+    reviewCount: 98,
+  },
+  {
+    id: "5",
+    name: "Phoenix Rise Tee",
+    description: "Phoenix rise signature tee.",
+    slug: "phoenix-rise-tee",
+    price: 129,
+    image: product1,
+    images: [product1, product2],
+    category: "Signature",
+    rating: 4.7,
+    reviewCount: 167,
+    discount: 15,
+  },
+  {
+    id: "6",
+    name: "Midnight Black Pro",
+    description: "Midnight black pro essential tee.",
+    slug: "midnight-black-pro",
+    price: 109,
+    image: product3,
+    images: [product3, product1],
+    category: "Essential",
+    rating: 4.5,
+    reviewCount: 143,
+  },
+];
+
+export const getProductById = (id: string) => products.find((p) => p.id === id);
+

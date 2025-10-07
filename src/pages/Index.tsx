@@ -13,6 +13,8 @@ import { SignupLoginPopup } from "@/components/SignupLoginPopup";
 import { ReferralPaymentPopup } from "@/components/ReferralPaymentPopup";
 import { DiscountPopup } from "@/components/DiscountPopup";
 import { useState } from "react";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { Product } from "@/components/ProductCard";
 
 const Index = () => {
   const {
@@ -29,6 +31,7 @@ const Index = () => {
   } = useCart();
   const [paymentOpen, setPaymentOpen] = useState(false);
   const { toast } = useToast();
+  const { wishlistIds } = useWishlist();
 
   const handleCheckout = () => {
     if (!isLoggedIn) {
@@ -39,7 +42,7 @@ const Index = () => {
     setPaymentOpen(true);
   };
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addToCart(product);
     if (isLoggedIn) {
       toast({
@@ -67,12 +70,28 @@ const Index = () => {
   {/* AnimatedLogo removed: now only shown in App.tsx for intro animation */}
       <Navigation
         cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+        wishlistCount={wishlistIds.length}
         onCartClick={() => setCartOpen(true)}
       />
       
       <main>
         <Hero />
         <ProductCollection onAddToCart={handleAddToCart} />
+        {wishlistIds.length > 0 && (
+          <section className="py-12 px-4">
+            <div className="container mx-auto">
+              <h3 className="text-2xl font-semibold mb-4">Your Wishlist</h3>
+              <p className="text-muted-foreground mb-6">Saved items across sessions. Come back anytime.</p>
+              <div className="flex flex-wrap gap-2">
+                {wishlistIds.map((id) => (
+                  <span key={id} className="text-sm px-3 py-1 rounded-full bg-secondary">
+                    #{id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
         <AboutSection />
         <Newsletter />
       </main>

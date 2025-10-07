@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ProductDetail } from "./pages/ProductDetail";
@@ -15,6 +16,7 @@ import { FAQ } from "./pages/FAQ";
 import { Shipping } from "./pages/Shipping";
 import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
+import Wishlist from "./pages/Wishlist";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,8 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <CartProvider>
-                <Routes>
+                <WishlistProvider>
+                  <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/about" element={<About />} />
@@ -41,9 +44,11 @@ const App = () => {
                   <Route path="/shipping" element={<Shipping />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/terms" element={<Terms />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
-                </Routes>
+                  </Routes>
+                </WishlistProvider>
               </CartProvider>
             </BrowserRouter>
           </TooltipProvider>

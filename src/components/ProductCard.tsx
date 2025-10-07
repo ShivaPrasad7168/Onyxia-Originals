@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Heart, Star, Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 export interface Product {
   id: string; // uuid
@@ -29,24 +30,8 @@ interface ProductCardProps {
 export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    const wishlist = JSON.parse(localStorage.getItem("onyxia_wishlist") || "[]");
-    setIsFavorite(wishlist.includes(product.id));
-  }, [product.id]);
-
-  const toggleWishlist = () => {
-    const wishlist = JSON.parse(localStorage.getItem("onyxia_wishlist") || "[]");
-    let newWishlist;
-    if (wishlist.includes(product.id)) {
-  newWishlist = wishlist.filter((id: string) => id !== product.id);
-    } else {
-      newWishlist = [...wishlist, product.id];
-    }
-    localStorage.setItem("onyxia_wishlist", JSON.stringify(newWishlist));
-    setIsFavorite(!isFavorite);
-  };
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isFavorite = isInWishlist(product.id);
 
   return (
     <Card
@@ -102,7 +87,7 @@ export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
               className={`bg-background/90 hover:bg-background ${
                 isFavorite ? "text-primary" : ""
               }`}
-              onClick={toggleWishlist}
+              onClick={() => toggleWishlist(product)}
             >
               <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
             </Button>
