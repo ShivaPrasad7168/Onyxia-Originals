@@ -11,6 +11,7 @@ import { SignupLoginPopup } from "@/components/SignupLoginPopup";
 import { Footer } from "@/components/Footer";
 import { Product } from "@/components/ProductCard";
 import { useState } from "react";
+import { useEffect } from "react";
 
 // Mock product data - in a real app, this would come from a database
 const mockProducts: Product[] = [
@@ -55,11 +56,20 @@ export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const product = mockProducts.find((p) => p.id === id);
-  
+
+  // Scroll to top on mount or product change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
   const [selectedSize, setSelectedSize] = useState("M");
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("green");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [sliderIndex, setSliderIndex] = useState(0);
+
+  // For demo, use single image, but support multiple images
+  const productImages = [product?.image, product?.image];
 
   if (!product) {
     return (
@@ -123,27 +133,52 @@ export const ProductDetail = () => {
           Back to Products
         </Button>
 
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Image */}
-          <div className="space-y-4">
-            <Card className="overflow-hidden bg-secondary border-border">
-              <div className="aspect-square relative">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Product Image Slider */}
+          <div className="flex flex-col items-center justify-center">
+            <Card className="overflow-hidden bg-secondary border-border w-full">
+              <div className="aspect-square relative flex items-center justify-center">
+                <button
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
+                  onClick={() => setSliderIndex((sliderIndex - 1 + productImages.length) % productImages.length)}
+                  aria-label="Previous image"
+                  title="Previous image"
+                >
+                  <Minus className="h-5 w-5" />
+                </button>
                 <img
-                  src={product.image}
+                  src={productImages[sliderIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-lg max-h-96 max-w-96"
                 />
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
+                  onClick={() => setSliderIndex((sliderIndex + 1) % productImages.length)}
+                  aria-label="Next image"
+                  title="Next image"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
                 {product.isNew && (
                   <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
                     New
                   </Badge>
                 )}
               </div>
+              {/* Slider dots */}
+              <div className="flex justify-center gap-2 py-2">
+                {productImages.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-2 w-2 rounded-full ${sliderIndex === idx ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                  />
+                ))}
+              </div>
             </Card>
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-6">
+          {/* Product Details - left aligned, fills space */}
+          <div className="space-y-6 text-left">
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
                 {product.category}
@@ -265,18 +300,7 @@ export const ProductDetail = () => {
             <div className="pt-6 border-t border-border">
               <h3 className="text-lg font-semibold mb-4">DESCRIPTION</h3>
               <p className="text-sm text-foreground/90 leading-relaxed">
-                Refresh your wardrobe with this <strong>light green poly-cotton casual
-                shirt</strong> designed for modern men. Crafted from a soft and durable
-                poly-cotton blend, this shirt offers the perfect balance of comfort,
-                breathability, and easy maintenance. Its short sleeves and regular fit
-                make it ideal for warm weather, while the subtle textured fabric adds a
-                touch of sophistication.
-              </p>
-              <p className="text-sm text-foreground/90 leading-relaxed mt-4">
-                Whether layered over a plain tee or styled solo, this shirt transitions
-                seamlessly from casual outings to relaxed evenings. Pair it with jeans,
-                chinos, or shorts for an effortlessly stylish look. A must-have staple
-                that combines everyday ease with smart casual charm.
+                {product.description}
               </p>
             </div>
           </div>
