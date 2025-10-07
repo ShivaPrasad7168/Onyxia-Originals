@@ -11,32 +11,89 @@ import { SignupLoginPopup } from "@/components/SignupLoginPopup";
 import { Footer } from "@/components/Footer";
 import { Product } from "@/components/ProductCard";
 import { useState } from "react";
+import product1 from "@/assets/product-1.jpg";
+import product2 from "@/assets/product-2.jpg";
+import product3 from "@/assets/product-3.jpg";
+import product4 from "@/assets/product-4.jpg";
 import { useEffect } from "react";
 
 // Mock product data - in a real app, this would come from a database
 const mockProducts: Product[] = [
   {
     id: "1",
-    name: "Premium Cotton T-Shirt",
-    description: "Elevate your casual wardrobe with this premium cotton t-shirt",
-    slug: "essential-tee",
-    price: 89,
-    image: "/src/assets/product-1.jpg",
-    category: "Gentle Trends",
-    rating: 4.8,
-    reviewCount: 124,
+    name: "Dragon Emblem Tee",
+    description: "Premium tee with dragon emblem.",
+    slug: "dragon-emblem-tee",
+    price: 129,
+    image: product1,
+    images: [product1, product2],
+    category: "Signature",
     isNew: true,
+    rating: 4.8,
+    reviewCount: 234,
   },
   {
     id: "2",
-    name: "Classic Polo Shirt",
-    description: "Timeless elegance meets modern comfort",
-    slug: "classic-polo",
-    price: 129,
-    image: "/src/assets/product-2.jpg",
-    category: "Luxuria",
+    name: "Classic White Premium",
+    description: "Classic white premium tee.",
+    slug: "classic-white-premium",
+    price: 99,
+    image: product2,
+    images: [product2, product1],
+    category: "Essential",
+    rating: 4.6,
+    reviewCount: 156,
+    discount: 20,
+  },
+  {
+    id: "3",
+    name: "Charcoal Elite",
+    description: "Charcoal elite edition tee.",
+    slug: "charcoal-elite",
+    price: 119,
+    image: product3,
+    images: [product3, product4],
+    category: "Essential",
+    isNew: true,
     rating: 4.9,
-    reviewCount: 89,
+    reviewCount: 189,
+  },
+  {
+    id: "4",
+    name: "Navy Gold Edition",
+    description: "Navy gold edition tee.",
+    slug: "navy-gold-edition",
+    price: 139,
+    image: product4,
+    images: [product4, product3],
+    category: "Limited",
+    rating: 5.0,
+    reviewCount: 98,
+  },
+  {
+    id: "5",
+    name: "Phoenix Rise Tee",
+    description: "Phoenix rise signature tee.",
+    slug: "phoenix-rise-tee",
+    price: 129,
+    image: product1,
+    images: [product1, product2],
+    category: "Signature",
+    rating: 4.7,
+    reviewCount: 167,
+    discount: 15,
+  },
+  {
+    id: "6",
+    name: "Midnight Black Pro",
+    description: "Midnight black pro essential tee.",
+    slug: "midnight-black-pro",
+    price: 109,
+    image: product3,
+    images: [product3, product1],
+    category: "Essential",
+    rating: 4.5,
+    reviewCount: 143,
   },
 ];
 
@@ -67,9 +124,17 @@ export const ProductDetail = () => {
   const [selectedColor, setSelectedColor] = useState("green");
   const [isFavorite, setIsFavorite] = useState(false);
   const [sliderIndex, setSliderIndex] = useState(0);
-
-  // For demo, use single image, but support multiple images
-  const productImages = [product?.image, product?.image];
+  // Use product.images for carousel
+  const productImages = product?.images || [product?.image];
+  // Keyboard navigation for slider
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") setSliderIndex((sliderIndex - 1 + productImages.length) % productImages.length);
+      if (e.key === "ArrowRight") setSliderIndex((sliderIndex + 1) % productImages.length);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sliderIndex, productImages.length]);
 
   if (!product) {
     return (
@@ -134,10 +199,11 @@ export const ProductDetail = () => {
         </Button>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Product Image Slider */}
+          {/* Modern Product Image Carousel */}
           <div className="flex flex-col items-center justify-center">
             <Card className="overflow-hidden bg-secondary border-border w-full">
               <div className="aspect-square relative flex items-center justify-center">
+                {/* Prev Button */}
                 <button
                   className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
                   onClick={() => setSliderIndex((sliderIndex - 1 + productImages.length) % productImages.length)}
@@ -146,11 +212,14 @@ export const ProductDetail = () => {
                 >
                   <Minus className="h-5 w-5" />
                 </button>
+                {/* Main Image */}
                 <img
                   src={productImages[sliderIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover rounded-lg max-h-96 max-w-96"
+                  className="w-full h-full object-cover rounded-lg max-h-96 max-w-96 transition-all duration-300"
+                  draggable="false"
                 />
+                {/* Next Button */}
                 <button
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
                   onClick={() => setSliderIndex((sliderIndex + 1) % productImages.length)}
@@ -165,13 +234,17 @@ export const ProductDetail = () => {
                   </Badge>
                 )}
               </div>
-              {/* Slider dots */}
+              {/* Thumbnails */}
               <div className="flex justify-center gap-2 py-2">
-                {productImages.map((_, idx) => (
-                  <span
+                {productImages.map((img, idx) => (
+                  <button
                     key={idx}
-                    className={`h-2 w-2 rounded-full ${sliderIndex === idx ? 'bg-primary' : 'bg-muted-foreground/30'}`}
-                  />
+                    className={`h-12 w-12 rounded-lg border ${sliderIndex === idx ? 'border-primary' : 'border-border'} overflow-hidden focus:outline-none`}
+                    onClick={() => setSliderIndex(idx)}
+                    aria-label={`Show image ${idx + 1}`}
+                  >
+                    <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
                 ))}
               </div>
             </Card>
@@ -185,14 +258,41 @@ export const ProductDetail = () => {
               </p>
               <h1 className="text-3xl font-bold mb-3">{product.name}</h1>
               <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-primary">
-                  RS. {product.price}.00
-                </span>
-                {product.discount && (
-                  <span className="text-xl text-muted-foreground line-through">
-                    RS. {Math.round(product.price * 1.5)}.00
+                {product.discount ? (
+                  <>
+                    <span className="text-3xl font-bold text-primary">
+                      RS. {Math.round(product.price * (1 - product.discount / 100))}.00
+                    </span>
+                    <span className="text-xl text-muted-foreground line-through">
+                      RS. {product.price}.00
+                    </span>
+                    <Badge className="ml-2 bg-green-600 text-white">{product.discount}% OFF</Badge>
+                  </>
+                ) : (
+                  <span className="text-3xl font-bold text-primary">
+                    RS. {product.price}.00
                   </span>
                 )}
+              </div>
+              {/* Rating and reviews */}
+              <div className="flex items-center gap-2 mt-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} className={i < Math.round(product.rating) ? "text-yellow-400" : "text-gray-300"}>
+                    ★
+                  </span>
+                ))}
+                <span className="text-sm text-muted-foreground ml-2">{product.rating} ({product.reviewCount} reviews)</span>
+                {/* Share button */}
+                <button
+                  className="ml-4 px-2 py-1 rounded bg-muted-foreground/10 text-muted-foreground hover:bg-muted-foreground/20"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Product link copied!");
+                  }}
+                  title="Share product"
+                >
+                  Share
+                </button>
               </div>
             </div>
 
@@ -226,6 +326,7 @@ export const ProductDetail = () => {
                         : "border-border"
                     }`}
                     onClick={() => setSelectedColor(color.name)}
+                    title={color.name}
                   />
                 ))}
               </div>

@@ -13,6 +13,7 @@ export interface Product {
   slug: string;
   price: number;
   image: string; // local image path
+  images?: string[];
   category?: string;
   discount?: number;
   rating?: number;

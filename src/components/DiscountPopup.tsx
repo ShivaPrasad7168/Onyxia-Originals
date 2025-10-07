@@ -43,19 +43,21 @@ export const DiscountPopup = () => {
 
       {/* Popup */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full border border-border pointer-events-auto animate-scale-in">
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 h-8 w-8 rounded-full hover:bg-muted"
-            onClick={() => setVisible(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-
+        <div className="bg-card rounded-2xl shadow-2xl max-w-md w-full border border-border pointer-events-auto animate-scale-in relative">
           {/* Content */}
           <div className="p-8 text-center space-y-6">
+            {/* Close Button inside card */}
+            <div className="flex justify-end mb-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => setVisible(false)}
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
             {/* Image */}
             <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-primary/20">
               <img 
