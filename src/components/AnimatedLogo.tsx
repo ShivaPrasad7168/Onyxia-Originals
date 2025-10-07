@@ -29,7 +29,7 @@ const IntroAnimation = ({ onComplete }: { onComplete: () => void }) => {
         <h1 className="text-4xl md:text-5xl font-cinzel font-bold text-gradient-gold mb-2">
           ONYXIA
         </h1>
-        <p className="text-secondary text-sm tracking-[0.3em] uppercase">
+        <p className="text-foreground/80 text-sm tracking-[0.3em] uppercase">
           Luxury Fashion
         </p>
       </div>

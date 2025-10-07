@@ -1,6 +1,7 @@
 import { useCart } from "@/contexts/CartContext";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShoppingCart as ShoppingCartIcon, Heart, Minus, Plus, ArrowLeft, Ruler, ShieldCheck, Truck, CreditCard } from "lucide-react";
+import { ShoppingCart as ShoppingCartIcon, Heart, ChevronLeft, ChevronRight, ArrowLeft, Ruler, ShieldCheck, Truck, CreditCard, Minus, Plus } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,8 @@ export const ProductDetail = () => {
   const isFavorite = product ? isInWishlist(product.id) : false;
   const [sliderIndex, setSliderIndex] = useState(0);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
+  const [selectedSlide, setSelectedSlide] = useState(0);
   // Use product.images for carousel
   const productImages = product?.images || [product?.image];
   // Keyboard navigation for slider
@@ -68,6 +71,16 @@ export const ProductDetail = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [sliderIndex, productImages.length]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setSelectedSlide(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
 
   if (!product) {
     return (
@@ -132,40 +145,48 @@ export const ProductDetail = () => {
         </Button>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Modern Product Image Carousel with Lightbox */}
+          {/* Modern Product Image Carousel with Lightbox and Bootstrap-like indicators/captions */}
           <div className="flex flex-col items-center justify-center">
-            <Card className="overflow-hidden bg-secondary border-border w-full">
-              <div className="aspect-square relative flex items-center justify-center">
+            <Card className="overflow-hidden bg-secondary border-border/40 w-full">
+              <div className="aspect-square relative flex items-center justify-center select-none">
                 {/* Prev Button */}
                 <button
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
-                  onClick={() => setSliderIndex((sliderIndex - 1 + productImages.length) % productImages.length)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background z-20"
+                  onClick={() => carouselApi?.scrollPrev()}
                   aria-label="Previous image"
                   title="Previous image"
                 >
-                  <Minus className="h-5 w-5" />
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
                 {/* Main Image */}
                 <Dialog>
-                  <img
-                    src={productImages[sliderIndex]}
-                    alt={product.name}
-                    className="w-full h-full object-cover rounded-lg max-h-96 max-w-96 transition-all duration-300 cursor-zoom-in"
-                    draggable="false"
-                    onClick={(e) => {
-                      (e.currentTarget.nextSibling as HTMLElement)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-                    }}
-                  />
+                  <Carousel opts={{ loop: true }} setApi={setCarouselApi} className="w-full h-full">
+                    <CarouselContent>
+                      {productImages.map((img, idx) => (
+                        <CarouselItem key={idx}>
+                          <img
+                            src={img}
+                            alt={product.name}
+                            className="w-full h-full object-cover rounded-lg max-h-[32rem] md:max-h-[36rem] cursor-zoom-in"
+                            draggable="false"
+                            onClick={(e) => {
+                              (e.currentTarget.nextElementSibling as HTMLElement | null)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                            }}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
                   <button className="hidden" aria-hidden="true" aria-label="Open image lightbox" title="Open image lightbox" type="button" />
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
                       <DialogTitle>{product.name}</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-4">
-                      <img src={productImages[sliderIndex]} alt={product.name} className="w-full h-auto object-contain" />
+                      <img src={productImages[selectedSlide]} alt={product.name} className="w-full h-auto object-contain" />
                       <div className="flex gap-2 overflow-x-auto">
                         {productImages.map((img, idx) => (
-                          <button key={idx} className={`h-16 w-16 rounded border ${sliderIndex === idx ? 'border-primary' : 'border-border'}`} onClick={() => setSliderIndex(idx)}>
+                          <button key={idx} className={`h-16 w-16 rounded border ${selectedSlide === idx ? 'border-primary' : 'border-border'}`} onClick={() => carouselApi?.scrollTo(idx)}>
                             <img src={img} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
                           </button>
                         ))}
@@ -175,18 +196,34 @@ export const ProductDetail = () => {
                 </Dialog>
                 {/* Next Button */}
                 <button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background"
-                  onClick={() => setSliderIndex((sliderIndex + 1) % productImages.length)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 shadow hover:bg-background z-20"
+                  onClick={() => carouselApi?.scrollNext()}
                   aria-label="Next image"
                   title="Next image"
                 >
-                  <Plus className="h-5 w-5" />
+                  <ChevronRight className="h-5 w-5" />
                 </button>
                 {product.isNew && (
                   <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
                     New
                   </Badge>
                 )}
+                {/* Indicators (dots) */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                  {productImages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      aria-label={`Slide ${idx + 1}`}
+                      aria-current={selectedSlide === idx}
+                      onClick={() => carouselApi?.scrollTo(idx)}
+                      className={`h-2.5 w-2.5 rounded-full transition-all ${
+                        selectedSlide === idx ? 'bg-white/90 w-6' : 'bg-white/50 hover:bg-white/70'
+                      }`}
+                    />
+                  ))}
+                </div>
+                {/* Caption removed per request */}
               </div>
               {/* Thumbnails */}
               <div className="flex justify-center gap-2 py-2">
