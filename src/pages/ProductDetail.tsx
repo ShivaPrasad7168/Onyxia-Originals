@@ -56,22 +56,13 @@ export const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("green");
   const isFavorite = product ? isInWishlist(product.id) : false;
-  const [sliderIndex, setSliderIndex] = useState(0);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | undefined>();
   const [selectedSlide, setSelectedSlide] = useState(0);
   // Use product.images for carousel
   const productImages = product?.images || [product?.image];
-  // Keyboard navigation for slider
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") setSliderIndex((sliderIndex - 1 + productImages.length) % productImages.length);
-      if (e.key === "ArrowRight") setSliderIndex((sliderIndex + 1) % productImages.length);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [sliderIndex, productImages.length]);
 
+  // Sync carousel with selected slide
   useEffect(() => {
     if (!carouselApi) return;
     const onSelect = () => setSelectedSlide(carouselApi.selectedScrollSnap());
@@ -80,6 +71,16 @@ export const ProductDetail = () => {
     return () => {
       carouselApi.off("select", onSelect);
     };
+  }, [carouselApi]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") carouselApi?.scrollPrev();
+      if (e.key === "ArrowRight") carouselApi?.scrollNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [carouselApi]);
 
   if (!product) {
@@ -230,8 +231,8 @@ export const ProductDetail = () => {
                 {productImages.map((img, idx) => (
                   <button
                     key={idx}
-                    className={`h-12 w-12 rounded-lg border ${sliderIndex === idx ? 'border-primary' : 'border-border'} overflow-hidden focus:outline-none`}
-                    onClick={() => setSliderIndex(idx)}
+                    className={`h-12 w-12 rounded-lg border ${selectedSlide === idx ? 'border-primary' : 'border-border'} overflow-hidden focus:outline-none`}
+                    onClick={() => carouselApi?.scrollTo(idx)}
                     aria-label={`Show image ${idx + 1}`}
                   >
                     <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />

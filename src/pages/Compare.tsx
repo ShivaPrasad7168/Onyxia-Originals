@@ -40,7 +40,7 @@ const Compare = () => {
                       {Object.entries((p as any).specs).map(([k, v]) => (
                         <div key={k} className="flex justify-between gap-4 text-muted-foreground">
                           <span>{k}</span>
-                          <span className="text-foreground">{v}</span>
+                          <span className="text-foreground">{String(v)}</span>
                         </div>
                       ))}
                     </div>
