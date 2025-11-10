@@ -110,13 +110,16 @@ export const SignupLoginPopup = ({ isOpen, onClose, onSuccess }: SignupLoginPopu
       if (error) {
         // Check if it's an invalid credentials error
         if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed')) {
+          setIsLoading(false);
           toast.error('Account not found or incorrect credentials', {
             description: 'Please sign up if you don\'t have an account',
             action: {
               label: 'Sign Up',
               onClick: () => {
-                setActiveTab('signup');
-                setSignupEmail(signinEmail);
+                setTimeout(() => {
+                  setActiveTab('signup');
+                  setSignupEmail(signinEmail);
+                }, 0);
               }
             }
           });
@@ -185,13 +188,16 @@ export const SignupLoginPopup = ({ isOpen, onClose, onSuccess }: SignupLoginPopu
       }
     } catch (error: any) {
       if (error.message.includes('already registered')) {
+        setIsLoading(false);
         toast.error('Email already registered', {
           description: 'Please sign in instead',
           action: {
             label: 'Sign In',
             onClick: () => {
-              setActiveTab('login');
-              setSigninEmail(signupEmail);
+              setTimeout(() => {
+                setActiveTab('login');
+                setSigninEmail(signupEmail);
+              }, 0);
             }
           }
         });
