@@ -170,6 +170,7 @@ export const ProductDetail = ({ user, openAuthPopup }: ProductDetailProps) => {
       <Navigation
         cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         onCartClick={() => setCartOpen(true)}
+        onLoginClick={() => setLoginOpen(true)}
       />
       
       <div className="min-h-screen bg-background pt-20 pb-12">

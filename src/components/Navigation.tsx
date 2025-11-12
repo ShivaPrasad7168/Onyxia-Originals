@@ -1,23 +1,41 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Search, Menu, X, User, LogIn, UserPlus, Globe, Heart } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User, LogIn, UserPlus, Globe, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import logo from "@/assets/onyxia-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface NavigationProps {
   cartItemsCount?: number;
   onCartClick: () => void;
   wishlistCount?: number;
+  onLoginClick?: () => void;
 }
 
-export const Navigation = ({ cartItemsCount = 0, onCartClick, wishlistCount = 0 }: NavigationProps) => {
+export const Navigation = ({ cartItemsCount = 0, onCartClick, wishlistCount = 0, onLoginClick }: NavigationProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check current auth state
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data?.user || null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,24 +187,52 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick, wishlistCount = 0 
                 <User className="h-4 w-4" />
                 My Account
               </div>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2 bg-background hover:bg-primary/10 hover:text-primary hover:border-primary"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <LogIn className="h-4 w-4" />
-                  Log In
-                </Button>
-                <Button
-                  variant="default"
-                  className="w-full justify-start gap-2"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Register
-                </Button>
-              </div>
+              
+              {user ? (
+                <div className="space-y-2">
+                  <div className="px-4 py-2 bg-primary/5 rounded-lg">
+                    <p className="text-sm font-medium truncate">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">Signed in</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 bg-background hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      toast.success("Signed out successfully");
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 bg-background hover:bg-primary/10 hover:text-primary hover:border-primary"
+                    onClick={() => {
+                      setSidebarOpen(false);
+                      onLoginClick?.();
+                    }}
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Log In
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="w-full justify-start gap-2"
+                    onClick={() => {
+                      setSidebarOpen(false);
+                      onLoginClick?.();
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Register
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 

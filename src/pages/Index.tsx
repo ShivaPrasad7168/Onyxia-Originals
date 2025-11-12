@@ -88,6 +88,7 @@ const Index = () => {
         cartItemsCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         wishlistCount={wishlistIds.length}
         onCartClick={() => setCartOpen(true)}
+        onLoginClick={() => setLoginOpen(true)}
       />
       
       <main>
