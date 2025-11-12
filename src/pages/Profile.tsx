@@ -1,0 +1,267 @@
+import { useState, useEffect } from "react";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { User, Package, MapPin, LogOut } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+
+export const Profile = () => {
+  const navigate = useNavigate();
+  const { setLoginOpen } = useCart();
+  const { wishlistIds } = useWishlist();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState({
+    name: "",
+    phone: "",
+  });
+  const [address, setAddress] = useState({
+    street: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast.error("Please sign in to view your profile");
+      navigate("/");
+      setLoginOpen(true);
+      return;
+    }
+
+    setUser(user);
+    
+    // Fetch profile data
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profileData) {
+      setProfile({
+        name: profileData.name || "",
+        phone: profileData.phone || "",
+      });
+    }
+
+    setLoading(false);
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        name: profile.name,
+        phone: profile.phone,
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast.error("Failed to update profile");
+    } else {
+      toast.success("Profile updated successfully!");
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation
+        cartItemsCount={0}
+        wishlistCount={wishlistIds.length}
+        onCartClick={() => {}}
+        onLoginClick={() => setLoginOpen(true)}
+      />
+
+      <main className="container mx-auto px-4 pt-24 pb-12 max-w-5xl">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+            <p className="text-muted-foreground">{user?.email}</p>
+          </div>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="profile">
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="orders">
+              <Package className="h-4 w-4 mr-2" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="addresses">
+              <MapPin className="h-4 w-4 mr-2" />
+              Addresses
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>Update your personal details here</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email || ""}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={profile.name}
+                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={profile.phone}
+                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Save Changes
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order History</CardTitle>
+                <CardDescription>View your past orders</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No orders yet</p>
+                  <Button 
+                    variant="link" 
+                    onClick={() => navigate("/")}
+                    className="mt-2"
+                  >
+                    Start Shopping
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="addresses">
+            <Card>
+              <CardHeader>
+                <CardTitle>Saved Addresses</CardTitle>
+                <CardDescription>Manage your delivery addresses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="street">Street Address</Label>
+                    <Input
+                      id="street"
+                      value={address.street}
+                      onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                      placeholder="House no, Building name"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        value={address.city}
+                        onChange={(e) => setAddress({ ...address, city: e.target.value })}
+                        placeholder="City"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={address.state}
+                        onChange={(e) => setAddress({ ...address, state: e.target.value })}
+                        placeholder="State"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input
+                      id="pincode"
+                      value={address.pincode}
+                      onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+                      placeholder="6 digit pincode"
+                      maxLength={6}
+                    />
+                  </div>
+                  <Button type="button" className="w-full">
+                    Save Address
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Profile;

@@ -49,6 +49,7 @@ export const Navigation = ({ cartItemsCount = 0, onCartClick, wishlistCount = 0,
     { label: "Home", href: "/" },
     { label: "Shop", href: "/#collection" },
     { label: "About", href: "/about" },
+    { label: "Profile", href: "/profile" },
     { label: "Contact", href: "/contact" },
   ];
 

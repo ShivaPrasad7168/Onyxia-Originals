@@ -19,6 +19,7 @@ import { Privacy } from "./pages/Privacy";
 import { Terms } from "./pages/Terms";
 import Wishlist from "./pages/Wishlist";
 import Compare from "./pages/Compare";
+import Profile from "./pages/Profile";
 
 import { useSupabaseUser } from "@/hooks/useSupabaseUser"; // ✅ Added
 import { SignupLoginPopup } from "@/components/SignupLoginPopup"; // ✅ Added global popup
@@ -82,6 +83,7 @@ const App = () => {
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/product/:id" element={<ProductDetail user={user} openAuthPopup={() => setAuthPopupOpen(true)} />} />
+                      <Route path="/profile" element={<Profile />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/faq" element={<FAQ />} />

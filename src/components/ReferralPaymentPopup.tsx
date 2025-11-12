@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Smartphone, CreditCard, Banknote, QrCode, Package } from "lucide-react";
+import { Smartphone, CreditCard, Banknote, QrCode, Package, MapPin, Wallet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PaymentPopupProps {
   isOpen: boolean;
@@ -14,39 +16,76 @@ interface PaymentPopupProps {
 }
 
 export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPopupProps) => {
-  const [selectedMethod, setSelectedMethod] = useState("phonepe");
+  const [selectedMethod, setSelectedMethod] = useState("upi");
   const [upiId, setUpiId] = useState("");
   const [advanceAmount, setAdvanceAmount] = useState("");
   const { toast } = useToast();
+  
+  // Delivery details
+  const [deliveryDetails, setDeliveryDetails] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      loadUserProfile();
+    }
+  }, [isOpen]);
+
+  const loadUserProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profile) {
+      setDeliveryDetails({
+        ...deliveryDetails,
+        name: profile.name || "",
+        phone: profile.phone || "",
+      });
+    }
+  };
 
   const paymentMethods = [
-    { id: "phonepe", name: "PhonePe", icon: Smartphone, color: "text-purple-500" },
-    { id: "googlepay", name: "Google Pay", icon: Smartphone, color: "text-blue-500" },
-    { id: "paytm", name: "Paytm", icon: Smartphone, color: "text-cyan-500" },
-    { id: "upi", name: "Other UPI", icon: QrCode, color: "text-green-500" },
-    { id: "cod", name: "Cash on Delivery", icon: Package, color: "text-orange-500" },
+    { id: "upi", name: "UPI", icon: QrCode, color: "text-green-500" },
+    { id: "card", name: "Debit/Credit Cards", icon: CreditCard, color: "text-blue-500" },
+    { id: "netbanking", name: "Netbanking", icon: Banknote, color: "text-purple-500" },
+    { id: "wallet", name: "Wallets", icon: Wallet, color: "text-cyan-500" },
+    { id: "cod", name: "Partial Cash on Delivery", icon: Package, color: "text-orange-500" },
   ];
 
   const handlePayment = () => {
+    // Validate delivery details
+    if (!deliveryDetails.name || !deliveryDetails.phone || !deliveryDetails.address || 
+        !deliveryDetails.city || !deliveryDetails.state || !deliveryDetails.pincode) {
+      toast({
+        title: "Delivery details required",
+        description: "Please fill in all delivery details",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedMethod === "cod") {
       const advance = parseFloat(advanceAmount);
-      if (!advance || advance < 100) {
+      if (!advance || advance < 49) {
         toast({
           title: "Advance payment required",
-          description: "Please enter an advance amount of at least ₹100",
+          description: "Please enter an advance amount of at least ₹49",
           variant: "destructive",
         });
         return;
       }
-    }
-
-    if (selectedMethod === "upi" && !upiId) {
-      toast({
-        title: "UPI ID required",
-        description: "Please enter your UPI ID to proceed",
-        variant: "destructive",
-      });
-      return;
     }
 
     toast({
@@ -58,109 +97,183 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] border-primary/20 bg-card shadow-[0_0_50px_rgba(255,204,0,0.15)] flex flex-col overflow-hidden">
-        <div className="overflow-y-auto scrollbar-hide flex-1 pr-2">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] border-border bg-card flex flex-col overflow-hidden">
+        <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1 pr-2">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-gradient">Complete Your Purchase</DialogTitle>
-          <DialogDescription>
-            Choose your preferred payment method to finalize your order
-          </DialogDescription>
+          <DialogTitle className="text-xl font-semibold">DELIVERY DETAILS</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 mt-4">
           {/* Order Summary */}
-          <div className="p-4 bg-secondary/50 rounded-lg border border-border">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total Amount</span>
-              <span className="text-2xl font-bold text-gradient">₹{totalAmount}</span>
+          <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-semibold">Order Summary</p>
+                  <p className="text-sm text-muted-foreground">1 Item</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground line-through">₹{Math.round(totalAmount * 1.5)}</p>
+                <p className="text-xl font-bold text-green-600">₹{totalAmount}</p>
+                <p className="text-xs text-green-600">₹{Math.round(totalAmount * 0.5)} saved so far</p>
+              </div>
             </div>
           </div>
 
-          {/* Payment Methods */}
-          <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod}>
-            <div className="space-y-3">
-              {paymentMethods.map((method) => (
-                <Label
-                  key={method.id}
-                  htmlFor={method.id}
-                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedMethod === method.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <RadioGroupItem value={method.id} id={method.id} />
-                  <method.icon className={`h-6 w-6 ${method.color}`} />
-                  <span className="flex-1 font-medium">{method.name}</span>
-                  {method.id === "cod" && (
-                    <span className="text-xs text-muted-foreground">Advance required</span>
-                  )}
-                </Label>
-              ))}
+          {/* Delivery Details Form */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="h-5 w-5" />
+              <h3 className="font-semibold">Deliver To</h3>
             </div>
-          </RadioGroup>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name *</Label>
+                <Input
+                  id="name"
+                  value={deliveryDetails.name}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, name: e.target.value })}
+                  placeholder="Enter your name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  value={deliveryDetails.phone}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, phone: e.target.value })}
+                  placeholder="10 digit mobile number"
+                  maxLength={10}
+                />
+              </div>
+            </div>
 
-          {/* UPI ID Input */}
-          {selectedMethod === "upi" && (
-            <div className="space-y-2 animate-fade-in">
-              <Label htmlFor="upi-id">Enter UPI ID</Label>
-              <Input
-                id="upi-id"
-                placeholder="yourname@upi"
-                value={upiId}
-                onChange={(e) => setUpiId(e.target.value)}
-                className="border-primary/30"
+            <div className="space-y-2">
+              <Label htmlFor="address">Full Address *</Label>
+              <Textarea
+                id="address"
+                value={deliveryDetails.address}
+                onChange={(e) => setDeliveryDetails({ ...deliveryDetails, address: e.target.value })}
+                placeholder="House No., Building Name, Street, Area"
+                rows={2}
               />
             </div>
-          )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <Input
+                  id="city"
+                  value={deliveryDetails.city}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, city: e.target.value })}
+                  placeholder="City"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">State *</Label>
+                <Input
+                  id="state"
+                  value={deliveryDetails.state}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, state: e.target.value })}
+                  placeholder="State"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pincode">Pincode *</Label>
+              <Input
+                id="pincode"
+                value={deliveryDetails.pincode}
+                onChange={(e) => setDeliveryDetails({ ...deliveryDetails, pincode: e.target.value })}
+                placeholder="6 digit pincode"
+                maxLength={6}
+              />
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              <p>Standard: ₹99</p>
+            </div>
+          </div>
+
+          {/* Coupon Code */}
+          <div className="space-y-2">
+            <h3 className="font-semibold">OFFERS & REWARDS</h3>
+            <Input placeholder="Enter coupon code" />
+          </div>
+
+          {/* Payment Methods */}
+          <div className="space-y-3">
+            <h3 className="font-semibold">Payment Options</h3>
+            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded text-sm text-green-700 dark:text-green-400">
+              Get 20% off on Prepaid Orders
+            </div>
+            
+            <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod}>
+              <div className="space-y-2">
+                {paymentMethods.map((method) => (
+                  <Label
+                    key={method.id}
+                    htmlFor={method.id}
+                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
+                      selectedMethod === method.id
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <RadioGroupItem value={method.id} id={method.id} />
+                      <method.icon className={`h-5 w-5 ${method.color}`} />
+                      <span className="font-medium">{method.name}</span>
+                    </div>
+                    <div className="text-right">
+                      {method.id === "cod" ? (
+                        <span className="text-sm text-muted-foreground">₹49</span>
+                      ) : (
+                        <>
+                          <span className="text-sm text-green-600 font-semibold">Get 10% discount</span>
+                          <p className="text-xs text-muted-foreground">₹{Math.round(totalAmount * 0.9)}</p>
+                        </>
+                      )}
+                    </div>
+                  </Label>
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
 
           {/* Cash on Delivery Advance */}
           {selectedMethod === "cod" && (
             <div className="space-y-3 animate-fade-in">
-              <div className="p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-                <p className="text-sm text-foreground/90">
-                  <span className="font-semibold">💡 Why advance payment?</span>
+              <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg">
+                <p className="text-sm">
+                  <span className="font-semibold">Pay ₹49.00 now, Rest on delivery</span>
                   <br />
-                  A small advance helps us confirm your order and ensures your favorite items are reserved just for you!
+                  <span className="text-xs text-muted-foreground">Amount Non-Refundable</span>
                 </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="advance">Advance Amount (Minimum ₹100)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-muted-foreground">₹</span>
-                  <Input
-                    id="advance"
-                    type="number"
-                    placeholder="100"
-                    value={advanceAmount}
-                    onChange={(e) => setAdvanceAmount(e.target.value)}
-                    className="pl-8 border-primary/30"
-                    min="100"
-                  />
-                </div>
               </div>
             </div>
           )}
 
-          {/* Payment Info */}
-          <div className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-            <CreditCard className="h-5 w-5 text-primary mt-0.5" />
-            <p className="text-sm text-foreground/80">
-              Your payment is secure and encrypted. We support all major UPI apps and payment methods.
-            </p>
-          </div>
-
           {/* Action Button */}
-          <Button 
-            onClick={handlePayment} 
-            variant="luxury" 
-            size="lg" 
-            className="w-full"
-          >
-            {selectedMethod === "cod" 
-              ? `Pay Advance ₹${advanceAmount || 0}` 
-              : `Pay ₹${totalAmount}`}
-          </Button>
+          <div className="pt-4 border-t">
+            <Button 
+              onClick={handlePayment} 
+              size="lg" 
+              className="w-full bg-black text-white hover:bg-black/90"
+            >
+              {selectedMethod === "cod" 
+                ? `Pay ₹49` 
+                : `Pay ₹${Math.round(totalAmount * 0.9)}`}
+            </Button>
+            <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <img src="https://www.gokwik.co/assets/images/logo.png" alt="GoKwik" className="h-6" />
+              <span>Powered by GoKwik</span>
+            </div>
+          </div>
         </div>
         </div>
       </DialogContent>
