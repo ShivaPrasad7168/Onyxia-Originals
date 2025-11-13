@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Smartphone, CreditCard, Banknote, QrCode, Package, MapPin, Wallet } from "lucide-react";
+import { Smartphone, CreditCard, Banknote, QrCode, Package, MapPin, Wallet, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
+import { initiateGokwikPayment } from "@/services/paymentService";
 
 interface PaymentPopupProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
   const [selectedMethod, setSelectedMethod] = useState("upi");
   const [upiId, setUpiId] = useState("");
   const [advanceAmount, setAdvanceAmount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   
   // Delivery details
@@ -64,9 +66,9 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
     { id: "cod", name: "Partial Cash on Delivery", icon: Package, color: "text-orange-500" },
   ];
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     // Validate delivery details
-    if (!deliveryDetails.name || !deliveryDetails.phone || !deliveryDetails.address || 
+    if (!deliveryDetails.name || !deliveryDetails.phone || !deliveryDetails.address ||
         !deliveryDetails.city || !deliveryDetails.state || !deliveryDetails.pincode) {
       toast({
         title: "Delivery details required",
@@ -86,13 +88,48 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
         });
         return;
       }
+      // Handle COD payment (mock for now)
+      toast({
+        title: "Order confirmed! 🎉",
+        description: "Your COD order has been placed successfully.",
+      });
+      onClose();
+      return;
     }
 
-    toast({
-      title: "Order confirmed! 🎉",
-      description: `Your payment via ${paymentMethods.find(m => m.id === selectedMethod)?.name} has been processed.`,
-    });
-    onClose();
+    // Handle Gokwik payment for prepaid methods
+    setIsProcessing(true);
+    try {
+      const shippingAddress = `${deliveryDetails.address}, ${deliveryDetails.city}, ${deliveryDetails.state} - ${deliveryDetails.pincode}`;
+
+      const paymentData = {
+        amount: Math.round(totalAmount * 0.9), // 10% discount for prepaid
+        currency: "INR",
+        customerName: deliveryDetails.name,
+        customerEmail: "", // Will be filled from session in service
+        customerPhone: deliveryDetails.phone,
+        items: [], // Will be filled from cart context
+        shippingAddress,
+      };
+
+      const result = await initiateGokwikPayment(paymentData);
+
+      if (result.success && result.paymentUrl) {
+        // Redirect to Gokwik payment page
+        window.location.href = result.paymentUrl;
+      } else {
+        throw new Error(result.error || "Payment initiation failed");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Payment failed",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -260,14 +297,22 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
 
           {/* Action Button */}
           <div className="pt-4 border-t">
-            <Button 
-              onClick={handlePayment} 
-              size="lg" 
+            <Button
+              onClick={handlePayment}
+              size="lg"
               className="w-full bg-black text-white hover:bg-black/90"
+              disabled={isProcessing}
             >
-              {selectedMethod === "cod" 
-                ? `Pay ₹49` 
-                : `Pay ₹${Math.round(totalAmount * 0.9)}`}
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : selectedMethod === "cod" ? (
+                `Pay ₹49`
+              ) : (
+                `Pay ₹${Math.round(totalAmount * 0.9)}`
+              )}
             </Button>
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <img src="https://www.gokwik.co/assets/images/logo.png" alt="GoKwik" className="h-6" />

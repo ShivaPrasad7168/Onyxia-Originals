@@ -20,10 +20,23 @@ Deno.serve(async (req) => {
     
     console.log('Gokwik webhook received:', webhookData);
 
-    // Verify webhook signature here if Gokwik provides one
-    // This is important for security
+    // Verify webhook signature for security
+    const signature = req.headers.get('X-Gokwik-Signature');
+    const GOKWIK_WEBHOOK_SECRET = Deno.env.get('GOKWIK_WEBHOOK_SECRET');
 
-    const { order_id, payment_status, payment_id } = webhookData;
+    if (GOKWIK_WEBHOOK_SECRET && signature) {
+      const crypto = await import('https://deno.land/std@0.177.0/crypto/mod.ts');
+      const encoder = new TextEncoder();
+      const data = encoder.encode(JSON.stringify(webhookData));
+      const key = encoder.encode(GOKWIK_WEBHOOK_SECRET);
+      const expectedSignature = await crypto.createHmac('sha256', key).update(data).digest('hex');
+
+      if (signature !== `sha256=${expectedSignature}`) {
+        throw new Error('Invalid webhook signature');
+      }
+    }
+
+    const { order_id, payment_status, payment_id, transaction_id } = webhookData;
 
     if (!order_id) {
       throw new Error('Missing order_id in webhook');

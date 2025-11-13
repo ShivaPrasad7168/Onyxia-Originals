@@ -232,17 +232,23 @@ export const SignupLoginPopup = ({ isOpen, onClose, onSuccess }: SignupLoginPopu
   const handleSocialSignIn = async (provider: 'google' | 'facebook') => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
       if (error) throw error;
-      
-      toast.success(`Signing in with ${provider}...`);
+
+      // OAuth will redirect, so we don't need to set loading to false
+      toast.success(`Redirecting to ${provider}...`);
     } catch (error: any) {
+      console.error(`OAuth error for ${provider}:`, error);
       toast.error(error.message || `Failed to sign in with ${provider}`);
       setIsLoading(false);
     }

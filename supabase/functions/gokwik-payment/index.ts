@@ -85,28 +85,75 @@ Deno.serve(async (req) => {
     }
 
     // Gokwik Payment Gateway Integration
-    // Note: This is a placeholder. You'll need to integrate with actual Gokwik API
-    // Documentation: https://docs.gokwik.co/
-    
-    const gokwikResponse = {
-      success: true,
-      paymentUrl: `https://checkout.gokwik.co/pay?order_id=${order.id}`,
-      orderId: order.id,
-      message: 'Payment initiated successfully',
+    const GOKWIK_API_URL = 'https://api.gokwik.co/v1';
+    const GOKWIK_API_KEY = Deno.env.get('GOKWIK_API_KEY')!;
+    const GOKWIK_MERCHANT_ID = Deno.env.get('GOKWIK_MERCHANT_ID')!;
+
+    if (!GOKWIK_API_KEY || !GOKWIK_MERCHANT_ID) {
+      throw new Error('Gokwik API credentials not configured');
+    }
+
+    // Prepare Gokwik payment request
+    const gokwikPayload = {
+      merchant_id: GOKWIK_MERCHANT_ID,
+      order_id: order.id,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'INR',
+      customer: {
+        name: paymentData.customerName,
+        email: paymentData.customerEmail,
+        phone: paymentData.customerPhone,
+      },
+      items: paymentData.items.map(item => ({
+        id: item.productId,
+        name: `Product ${item.productId}`,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      shipping_address: paymentData.shippingAddress,
+      redirect_url: `${Deno.env.get('SITE_URL') || 'http://localhost:3000'}/payment/success`,
+      webhook_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/gokwik-webhook`,
     };
 
-    // Update order with payment ID
+    // Create payment with Gokwik
+    const gokwikResponse = await fetch(`${GOKWIK_API_URL}/payments/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GOKWIK_API_KEY}`,
+      },
+      body: JSON.stringify(gokwikPayload),
+    });
+
+    if (!gokwikResponse.ok) {
+      const errorData = await gokwikResponse.text();
+      console.error('Gokwik API error:', errorData);
+      throw new Error('Failed to create payment with Gokwik');
+    }
+
+    const gokwikData = await gokwikResponse.json();
+
+    // Update order with Gokwik payment details
     await supabase
       .from('orders')
       .update({
-        payment_id: order.id,
+        payment_id: gokwikData.payment_id,
+        payment_gateway_data: gokwikData,
       })
       .eq('id', order.id);
 
-    console.log('Payment initiated:', gokwikResponse);
+    const response = {
+      success: true,
+      paymentUrl: gokwikData.payment_url,
+      orderId: order.id,
+      paymentId: gokwikData.payment_id,
+      message: 'Payment initiated successfully',
+    };
+
+    console.log('Payment initiated:', response);
 
     return new Response(
-      JSON.stringify(gokwikResponse),
+      JSON.stringify(response),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

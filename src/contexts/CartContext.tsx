@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Product } from "@/components/ProductCard";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -16,6 +17,8 @@ interface CartContextType {
   setCartOpen: (value: boolean) => void;
   loginOpen: boolean;
   setLoginOpen: (value: boolean) => void;
+  user: any;
+  loading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,6 +28,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check authentication state on mount and listen for changes
+  useEffect(() => {
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      setIsLoggedIn(!!currentUser);
+      setLoading(false);
+    };
+
+    getInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentUser = session?.user || null;
+        setUser(currentUser);
+        setIsLoggedIn(!!currentUser);
+        setLoading(false);
+
+        // Clear cart if user logs out
+        if (event === 'SIGNED_OUT') {
+          setCartItems([]);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const addToCart = (product: Product) => {
     if (!isLoggedIn) {
@@ -74,6 +108,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setCartOpen,
         loginOpen,
         setLoginOpen,
+        user,
+        loading,
       }}
     >
       {children}

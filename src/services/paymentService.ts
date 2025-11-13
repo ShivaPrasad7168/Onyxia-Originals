@@ -29,15 +29,19 @@ export const initiateGokwikPayment = async (
 ): Promise<PaymentResponse> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session) {
       throw new Error('Please sign in to continue with payment');
     }
+
+    // Get user email from session
+    const userEmail = session.user.email || '';
 
     const { data, error } = await supabase.functions.invoke('gokwik-payment', {
       body: {
         orderId: crypto.randomUUID(),
         ...paymentData,
+        customerEmail: userEmail, // Add email from session
       },
     });
 
