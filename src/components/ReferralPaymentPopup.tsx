@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
 import { initiateGokwikPayment } from "@/services/paymentService";
+import { useCart } from "@/contexts/CartContext";
 
 interface PaymentPopupProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
   const [advanceAmount, setAdvanceAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const { cartItems, removeItem } = useCart();
   
   // Delivery details
   const [deliveryDetails, setDeliveryDetails] = useState({
@@ -102,19 +104,30 @@ export const ReferralPaymentPopup = ({ isOpen, onClose, totalAmount }: PaymentPo
     try {
       const shippingAddress = `${deliveryDetails.address}, ${deliveryDetails.city}, ${deliveryDetails.state} - ${deliveryDetails.pincode}`;
 
+      // Prepare cart items for payment
+      const paymentItems = cartItems.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const paymentAmount = selectedMethod === "cod" ? 49 : Math.round(totalAmount * 0.9);
+
       const paymentData = {
-        amount: Math.round(totalAmount * 0.9), // 10% discount for prepaid
+        amount: paymentAmount,
         currency: "INR",
         customerName: deliveryDetails.name,
         customerEmail: "", // Will be filled from session in service
         customerPhone: deliveryDetails.phone,
-        items: [], // Will be filled from cart context
+        items: paymentItems,
         shippingAddress,
       };
 
       const result = await initiateGokwikPayment(paymentData);
 
       if (result.success && result.paymentUrl) {
+        // Clear cart on successful payment initiation
+        cartItems.forEach(item => removeItem(item.id));
         // Redirect to Gokwik payment page
         window.location.href = result.paymentUrl;
       } else {

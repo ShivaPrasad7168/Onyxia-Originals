@@ -25,11 +25,22 @@ Deno.serve(async (req) => {
     const GOKWIK_WEBHOOK_SECRET = Deno.env.get('GOKWIK_WEBHOOK_SECRET');
 
     if (GOKWIK_WEBHOOK_SECRET && signature) {
-      const crypto = await import('https://deno.land/std@0.177.0/crypto/mod.ts');
       const encoder = new TextEncoder();
       const data = encoder.encode(JSON.stringify(webhookData));
-      const key = encoder.encode(GOKWIK_WEBHOOK_SECRET);
-      const expectedSignature = await crypto.createHmac('sha256', key).update(data).digest('hex');
+      const keyData = encoder.encode(GOKWIK_WEBHOOK_SECRET);
+      
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      );
+      
+      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, data);
+      const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
       if (signature !== `sha256=${expectedSignature}`) {
         throw new Error('Invalid webhook signature');
